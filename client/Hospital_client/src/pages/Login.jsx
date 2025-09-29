@@ -1,16 +1,29 @@
 import React, { useState } from 'react'
-import { Form, Input, Button, Card, message, Typography } from 'antd'
+import { Form, Input, Button, Card, message, Typography, Divider } from 'antd'
 import { UserOutlined, LockOutlined } from '@ant-design/icons'
-
+import { Link, useNavigate } from 'react-router-dom'
+import { useAuth } from '../contexts/AuthContext'
+import { authService } from '../services/auth'
 
 const { Title, Text } = Typography
 
 const Login = () => {
   const [loading, setLoading] = useState(false)
+  const { login } = useAuth()
+  const navigate = useNavigate()
 
   const onFinish = async (values) => {
     setLoading(true)
-   
+    try {
+      const response = await authService.login(values.username, values.password)
+      login(response.user, response.token)
+      message.success('Login successful!')
+      navigate('/')
+    } catch (error) {
+      message.error(error.response?.data?.error || 'Login failed')
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -19,7 +32,8 @@ const Login = () => {
       justifyContent: 'center', 
       alignItems: 'center', 
       minHeight: '100vh',
-      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      padding: '20px'
     }}>
       <Card style={{ width: 400, boxShadow: '0 8px 24px rgba(0,0,0,0.1)' }}>
         <div style={{ textAlign: 'center', marginBottom: 24 }}>
@@ -65,9 +79,22 @@ const Login = () => {
           </Form.Item>
         </Form>
 
-        <div style={{ textAlign: 'center', marginTop: 16 }}>
-          <Text type="secondary">
-            Demo: admin / admin123
+        <Divider>
+          <Text type="secondary">Or</Text>
+        </Divider>
+
+        <div style={{ textAlign: 'center' }}>
+          <Text>Don't have an account? </Text>
+          <Link to="/register">Register now!</Link>
+        </div>
+
+        <div style={{ marginTop: 16, padding: 12, background: '#f5f5f5', borderRadius: 6 }}>
+          <Text type="secondary" style={{ fontSize: 12 }}>
+            <strong>Demo Credentials:</strong><br />
+            Admin: admin / Admin123<br />
+            Doctor: doctor / Doctor123<br />
+            Reception: reception / Reception123<br />
+            Patient: patient / Patient123
           </Text>
         </div>
       </Card>

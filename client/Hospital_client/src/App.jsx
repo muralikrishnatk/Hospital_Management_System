@@ -1,20 +1,31 @@
-import React, { useState, useEffect } from 'react'
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
-import { Layout, Spin } from 'antd'
+import React from 'react'
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
+import { ConfigProvider } from 'antd'
 import Login from './pages/Login'
-
+import Register from './pages/Register'
+import { AuthProvider } from './contexts/AuthContext'
 import './App.css'
 
-const { Content } = Layout
-
 function App() {
- 
-
-
-    return <Login />
-
-
-
+  return (
+    <ConfigProvider
+      theme={{
+        token: {
+          colorPrimary: '#1890ff',
+        },
+      }}
+    >
+      <AuthProvider>
+        <Router>
+          <Routes>
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            
+          </Routes>
+        </Router>
+      </AuthProvider>
+    </ConfigProvider>
+  )
 }
 
 export default App
