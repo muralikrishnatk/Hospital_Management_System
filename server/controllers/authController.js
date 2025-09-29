@@ -1,5 +1,6 @@
 import jwt from 'jsonwebtoken';
 import { validationResult } from 'express-validator';
+import { Op } from 'sequelize'; // Import Sequelize operators
 import User from '../models/User.js';
 import Patient from '../models/Patient.js';
 import Doctor from '../models/Doctor.js';
@@ -11,12 +12,34 @@ export const register = async (req, res) => {
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { username, email, password, firstName, lastName, role, phone, department } = req.body;
+    const { 
+      username, 
+      email, 
+      password, 
+      firstName, 
+      lastName, 
+      role, 
+      phone, 
+      department,
+      // Patient-specific fields
+      dateOfBirth,
+      gender,
+      address,
+      // Doctor-specific fields
+      specialization,
+      qualification,
+      experience,
+      consultationFee,
+      bio
+    } = req.body;
 
-    // Check if user already exists
+    // Check if user already exists - FIXED
     const existingUser = await User.findOne({
       where: { 
-        $or: [{ email }, { username }] 
+        [Op.or]: [
+          { email: email },
+          { username: username }
+        ]
       }
     });
 
@@ -27,6 +50,7 @@ export const register = async (req, res) => {
     }
 
     // Create user
+    
     const user = await User.create({
       username,
       email,
@@ -41,10 +65,14 @@ export const register = async (req, res) => {
     // If role is patient, also create patient record
     if (role === 'patient') {
       await Patient.create({
+       
         firstName,
         lastName,
         email,
         phone,
+        dateOfBirth,
+        gender,
+        address: address || null,
         userId: user.id
       });
     }
@@ -90,6 +118,7 @@ export const register = async (req, res) => {
   }
 };
 
+// login, getProfile, updateProfile, changePassword functions remain the same...
 export const login = async (req, res) => {
   try {
     const errors = validationResult(req);
