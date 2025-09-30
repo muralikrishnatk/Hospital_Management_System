@@ -2,8 +2,8 @@ import React, { useState } from 'react'
 import { Form, Input, Button, Card, message, Typography, Divider } from 'antd'
 import { UserOutlined, LockOutlined } from '@ant-design/icons'
 import { Link, useNavigate } from 'react-router-dom'
-import { useAuth } from '../contexts/AuthContext'
-import { authService } from '../services/auth'
+import { useAuth } from '../../contexts/AuthContext'
+import { authService } from '../../services/auth'
 
 const { Title, Text } = Typography
 
