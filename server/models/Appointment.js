@@ -1,5 +1,5 @@
-import { DataTypes } from 'sequelize';
-import { sequelize } from './index.js';
+const { DataTypes } = require('sequelize');
+const { sequelize } = require('./index');
 
 const Appointment = sequelize.define('Appointment', {
   id: {
@@ -11,7 +11,7 @@ const Appointment = sequelize.define('Appointment', {
     type: DataTypes.INTEGER,
     allowNull: false,
     references: {
-      model: 'patients',
+      model: 'users',
       key: 'id'
     }
   },
@@ -19,23 +19,39 @@ const Appointment = sequelize.define('Appointment', {
     type: DataTypes.INTEGER,
     allowNull: false,
     references: {
-      model: 'doctors',
+      model: 'users',
       key: 'id'
     }
   },
-  appointmentDate: {
-    type: DataTypes.DATE,
+  date: {
+    type: DataTypes.DATEONLY,
     allowNull: false
   },
-  appointmentTime: {
+  time: {
     type: DataTypes.TIME,
     allowNull: false
   },
+  type: {
+    type: DataTypes.ENUM('consultation', 'checkup', 'surgery', 'followup', 'emergency', 'routine'),
+    defaultValue: 'consultation'
+  },
   status: {
-    type: DataTypes.ENUM('Scheduled', 'Completed', 'Cancelled', 'No-Show'),
-    defaultValue: 'Scheduled'
+    type: DataTypes.ENUM('pending', 'confirmed', 'completed', 'cancelled', 'no-show', 'rescheduled'),
+    defaultValue: 'pending'
   },
   reason: {
+    type: DataTypes.TEXT,
+    allowNull: false
+  },
+  symptoms: {
+    type: DataTypes.TEXT,
+    allowNull: true
+  },
+  diagnosis: {
+    type: DataTypes.TEXT,
+    allowNull: true
+  },
+  prescription: {
     type: DataTypes.TEXT,
     allowNull: true
   },
@@ -47,11 +63,36 @@ const Appointment = sequelize.define('Appointment', {
     type: DataTypes.INTEGER,
     defaultValue: 30,
     validate: {
-      min: 15
+      min: 15,
+      max: 240
+    }
+  },
+  priority: {
+    type: DataTypes.ENUM('low', 'medium', 'high', 'emergency'),
+    defaultValue: 'medium'
+  },
+  roomNumber: {
+    type: DataTypes.STRING(20),
+    allowNull: true
+  },
+  followUpRequired: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false
+  },
+  followUpDate: {
+    type: DataTypes.DATEONLY,
+    allowNull: true
+  },
+  createdBy: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    references: {
+      model: 'users',
+      key: 'id'
     }
   }
 }, {
   tableName: 'appointments'
 });
 
-export default Appointment;
+module.exports = Appointment;

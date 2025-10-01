@@ -1,5 +1,5 @@
-import { DataTypes } from 'sequelize';
-import { sequelize } from './index.js';
+const { DataTypes } = require('sequelize');
+const { sequelize } = require('./index');
 
 const Billing = sequelize.define('Billing', {
   id: {
@@ -11,7 +11,7 @@ const Billing = sequelize.define('Billing', {
     type: DataTypes.INTEGER,
     allowNull: false,
     references: {
-      model: 'patients',
+      model: 'users',
       key: 'id'
     }
   },
@@ -23,16 +23,29 @@ const Billing = sequelize.define('Billing', {
       key: 'id'
     }
   },
-  invoiceNumber: {
-    type: DataTypes.STRING,
-    allowNull: false,
-    unique: true
-  },
-  amount: {
-    type: DataTypes.DECIMAL(10, 2),
+  billNumber: {
+    type: DataTypes.STRING(50),
+    unique: true,
     allowNull: false
   },
-  tax: {
+  billDate: {
+    type: DataTypes.DATEONLY,
+    allowNull: false,
+    defaultValue: DataTypes.NOW
+  },
+  dueDate: {
+    type: DataTypes.DATEONLY,
+    allowNull: false
+  },
+  items: {
+    type: DataTypes.TEXT,
+    allowNull: false
+  },
+  subtotal: {
+    type: DataTypes.DECIMAL(12, 2),
+    allowNull: false
+  },
+  taxAmount: {
     type: DataTypes.DECIMAL(10, 2),
     defaultValue: 0
   },
@@ -41,54 +54,47 @@ const Billing = sequelize.define('Billing', {
     defaultValue: 0
   },
   totalAmount: {
-    type: DataTypes.DECIMAL(10, 2),
+    type: DataTypes.DECIMAL(12, 2),
     allowNull: false
   },
+  paidAmount: {
+    type: DataTypes.DECIMAL(12, 2),
+    defaultValue: 0
+  },
+  balance: {
+    type: DataTypes.DECIMAL(12, 2),
+    defaultValue: 0
+  },
   status: {
-    type: DataTypes.ENUM('Pending', 'Paid', 'Cancelled', 'Refunded'),
-    defaultValue: 'Pending'
+    type: DataTypes.ENUM('pending', 'partial', 'paid', 'overdue', 'cancelled'),
+    defaultValue: 'pending'
   },
   paymentMethod: {
-    type: DataTypes.STRING,
+    type: DataTypes.ENUM('cash', 'card', 'insurance', 'online', 'upi'),
     allowNull: true
   },
-  paymentDate: {
-    type: DataTypes.DATE,
+  insuranceProvider: {
+    type: DataTypes.STRING(255),
     allowNull: true
   },
-  dueDate: {
-    type: DataTypes.DATE,
+  insuranceClaimNumber: {
+    type: DataTypes.STRING(100),
     allowNull: true
-  },
-  items: {
-    type: DataTypes.JSON,
-    allowNull: false,
-    defaultValue: []
   },
   notes: {
     type: DataTypes.TEXT,
     allowNull: true
+  },
+  createdBy: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    references: {
+      model: 'users',
+      key: 'id'
+    }
   }
 }, {
-  tableName: 'billings'
+  tableName: 'billing'
 });
 
-// Generate invoice number before create
-Billing.beforeCreate(async (billing) => {
-  const date = new Date();
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const count = await Billing.count({
-    where: {
-      createdAt: {
-        [sequelize.Sequelize.Op.between]: [
-          new Date(date.getFullYear(), date.getMonth(), 1),
-          new Date(date.getFullYear(), date.getMonth() + 1, 0)
-        ]
-      }
-    }
-  });
-  billing.invoiceNumber = `INV-${year}${month}-${String(count + 1).padStart(4, '0')}`;
-});
-
-export default Billing;
+module.exports = Billing;
