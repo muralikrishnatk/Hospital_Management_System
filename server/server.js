@@ -13,8 +13,8 @@ const { errorHandler } = require('./middleware/errorHandler');
 // Import routes
 const authRoutes = require('./routes/auth');
 const adminRoutes = require('./routes/admin');
-const doctorRoutes = require('./routes/doctor');
-const patientRoutes = require('./routes/patient');
+const doctorRoutes = require('./routes/doctors');
+const patientRoutes = require('./routes/patients');
 const pharmacistRoutes = require('./routes/pharmacist');
 const receptionistRoutes = require('./routes/receptionist');
 const appointmentRoutes = require('./routes/appointments');
@@ -80,12 +80,14 @@ app.get('/api/health', (req, res) => {
 });
 
 // Handle undefined routes
-app.all('*', (req, res, next) => {
+// Correct usage for 404 catch-all at end of middleware stack
+app.use((req, res, next) => {
   res.status(404).json({
     success: false,
     message: `Route ${req.originalUrl} not found`
   });
 });
+
 
 // Error handling middleware
 app.use(errorHandler);

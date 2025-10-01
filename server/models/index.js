@@ -3,7 +3,7 @@ const { sequelize, Sequelize } = require('../config/database');
 // Import models
 const User = require('./User');
 const Appointment = require('./Appointment');
-const MedicalRecord = require('./MedicalRecord');
+const MedicalRecord = require('./MedicalRecords');
 const Prescription = require('./Prescription');
 const Inventory = require('./Inventory');
 const Billing = require('./Billing');
