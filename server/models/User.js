@@ -1,6 +1,6 @@
-import { DataTypes } from 'sequelize';
-import { sequelize } from './index.js';
-import bcrypt from 'bcryptjs';
+const { DataTypes } = require('sequelize');
+const { sequelize } = require('./index');
+const bcrypt = require('bcryptjs');
 
 const User = sequelize.define('User', {
   id: {
@@ -8,58 +8,88 @@ const User = sequelize.define('User', {
     primaryKey: true,
     autoIncrement: true
   },
-  username: {
-    type: DataTypes.STRING,
-    allowNull: false,
-    unique: true,
-    validate: {
-      len: [3, 30]
-    }
-  },
-  email: {
-    type: DataTypes.STRING,
-    allowNull: false,
-    unique: true,
-    validate: {
-      isEmail: true
-    }
-  },
-  password: {
-    type: DataTypes.STRING,
-    allowNull: false,
-    validate: {
-      len: [6, 100]
-    }
-  },
   firstName: {
-    type: DataTypes.STRING,
+    type: DataTypes.STRING(50),
     allowNull: false,
     validate: {
-      len: [2, 50]
+      notEmpty: { msg: 'First name is required' }
     }
   },
   lastName: {
-    type: DataTypes.STRING,
+    type: DataTypes.STRING(50),
     allowNull: false,
     validate: {
-      len: [2, 50]
+      notEmpty: { msg: 'Last name is required' }
+    }
+  },
+  email: {
+    type: DataTypes.STRING(100),
+    allowNull: false,
+    unique: true,
+    validate: {
+      isEmail: { msg: 'Please provide a valid email' },
+      notEmpty: { msg: 'Email is required' }
+    }
+  },
+  password: {
+    type: DataTypes.STRING(255),
+    allowNull: false,
+    validate: {
+      len: { args: [6, 255], msg: 'Password must be at least 6 characters' }
     }
   },
   role: {
-    type: DataTypes.ENUM('admin', 'doctor', 'receptionist', 'nurse', 'patient'),
+    type: DataTypes.ENUM('admin', 'doctor', 'patient', 'pharmacist', 'receptionist'),
+    allowNull: false,
     defaultValue: 'patient'
   },
   phone: {
-    type: DataTypes.STRING,
-    allowNull: true,
-    validate: {
-      len: [10, 15]
-    }
+    type: DataTypes.STRING(20),
+    allowNull: false
   },
-  department: {
-    type: DataTypes.STRING,
+  dateOfBirth: {
+    type: DataTypes.DATE,
+    allowNull: false
+  },
+  bloodGroup: {
+    type: DataTypes.ENUM('A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'),
     allowNull: true
   },
+  address: {
+    type: DataTypes.TEXT,
+    allowNull: true
+  },
+  
+  // Doctor-specific fields
+  specialization: {
+    type: DataTypes.STRING(100),
+    allowNull: true
+  },
+  qualification: {
+    type: DataTypes.STRING(200),
+    allowNull: true
+  },
+  licenseNumber: {
+    type: DataTypes.STRING(50),
+    allowNull: true,
+    unique: true
+  },
+  experience: {
+    type: DataTypes.INTEGER,
+    defaultValue: 0
+  },
+  consultationFee: {
+    type: DataTypes.DECIMAL(10, 2),
+    defaultValue: 0
+  },
+  
+  // Pharmacist-specific fields
+  pharmacyLicense: {
+    type: DataTypes.STRING(50),
+    allowNull: true
+  },
+  
+  // System fields
   isActive: {
     type: DataTypes.BOOLEAN,
     defaultValue: true
@@ -67,25 +97,37 @@ const User = sequelize.define('User', {
   lastLogin: {
     type: DataTypes.DATE,
     allowNull: true
+  },
+  profilePicture: {
+    type: DataTypes.STRING(255),
+    allowNull: true
   }
 }, {
   tableName: 'users',
   hooks: {
     beforeCreate: async (user) => {
       if (user.password) {
-        user.password = await bcrypt.hash(user.password, 12);
+        const salt = await bcrypt.genSalt(12);
+        user.password = await bcrypt.hash(user.password, salt);
       }
     },
     beforeUpdate: async (user) => {
       if (user.changed('password')) {
-        user.password = await bcrypt.hash(user.password, 12);
+        const salt = await bcrypt.genSalt(12);
+        user.password = await bcrypt.hash(user.password, salt);
       }
     }
   }
 });
 
-User.prototype.validatePassword = async function(password) {
-  return await bcrypt.compare(password, this.password);
+// Instance method to compare password
+User.prototype.comparePassword = async function(candidatePassword) {
+  return await bcrypt.compare(candidatePassword, this.password);
 };
 
-export default User;
+// Instance method to get full name
+User.prototype.getFullName = function() {
+  return `${this.firstName} ${this.lastName}`;
+};
+
+module.exports = User;
